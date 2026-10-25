@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#081511">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Tennis for Two">
+  <meta name="author" content="Troy Nebula">
+  <meta name="description" content="Tennis for Two: una recreación táctil a dos jugadores.">
+  <link rel="manifest" href="manifest.webmanifest">
+  <title>Tennis for Two</title>
+  <style>
+    :root { --mint:#78eeb1; --mint2:#b7ffd6; --screen:#06110d; --panel:#111714; --edge:#5a625b; --orange:#ef9a45; }
+    * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+    html,body { height:100%; margin:0; overflow:hidden; overscroll-behavior:none; touch-action:none; -webkit-text-size-adjust:100%; background:#050706; color:#e6eee7; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+    button,input { font:inherit; }
+    #app { height:100dvh; min-height:0; display:grid; grid-template-rows:auto minmax(0,1fr) auto; gap:8px; padding:max(8px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left)); background:radial-gradient(ellipse at 50% 45%,#0b2018 0%,#050706 72%); }
+    main { min-height:0; }
+    header { display:flex; align-items:center; justify-content:space-between; min-height:34px; gap:10px; color:#cdeed9; font-size:clamp(11px,1.9vw,15px); letter-spacing:.08em; text-transform:uppercase; }
+    .brand { white-space:nowrap; font-weight:800; } .brand span { color:var(--orange); }
+    .score { display:flex; gap:7px; align-items:center; font-weight:800; } .score b { color:var(--mint2); font-size:1.2em; }
+    .controls-top { display:flex; gap:5px; } .tiny { border:1px solid #3d5145; color:#d6e8dc; background:#111914; padding:6px 9px; border-radius:6px; font-size:11px; cursor:pointer; }
+    .tiny:active { background:#284b38; }
+    #scope { position:relative; min-height:0; border:clamp(7px,1.5vw,15px) solid #232824; border-radius:clamp(12px,2vw,21px); overflow:hidden; background:#03100b; box-shadow:inset 0 0 0 2px #607264, inset 0 0 42px #02180d,0 7px 22px #000; }
+    #court { width:100%; height:100%; display:block; touch-action:none; }
+    #creator-credit { position:absolute; right:12px; bottom:9px; z-index:3; color:#b5d9c4; font-size:clamp(10px,1.3vw,14px); line-height:1.3; pointer-events:none; text-shadow:0 1px 3px #000; }
+    #status { position:absolute; z-index:2; top:11px; left:50%; transform:translateX(-50%); text-align:center; font-size:clamp(10px,1.7vw,14px); color:#c7f6d6; text-shadow:0 0 8px #4dcc80; pointer-events:none; white-space:nowrap; }
+    #overlay { position:absolute; z-index:4; inset:0; display:grid; place-items:center; padding:18px; background:rgba(2,10,6,.48); }
+    .card { max-width:540px; text-align:center; padding:clamp(17px,4vw,30px); border:1px solid #607a69; background:rgba(6,18,12,.94); box-shadow:0 0 30px #000; border-radius:12px; }
+    .card h1 { margin:0 0 7px; font-size:clamp(22px,4.2vw,40px); color:#afffd1; letter-spacing:.08em; text-transform:uppercase; }
+    .card p { margin:8px auto; line-height:1.45; color:#d6e1d8; font-family:ui-sans-serif,system-ui,sans-serif; font-size:clamp(14px,2.1vw,16px); }
+    .card .history { font-size:12px; color:#93aa9a; max-width:430px; }
+    .start { margin-top:12px; min-height:48px; min-width:180px; border:2px solid #a8ffc9; border-radius:8px; background:#1c4b32; color:#fff; font-weight:900; letter-spacing:.08em; cursor:pointer; }
+    .start:active { transform:translateY(1px); background:#296e49; }
+    #controllers { display:grid; grid-template-columns:1fr auto 1fr; gap:10px; align-items:stretch; }
+    .controller { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:clamp(7px,1.7vw,18px); min-height:clamp(83px,16vh,130px); padding:7px clamp(8px,2vw,17px); border:2px solid #404841; border-radius:11px; background:linear-gradient(135deg,#292e2a,#101410); box-shadow:inset 0 0 0 1px #687069, 0 4px 10px #000; user-select:none; }
+    .controller.right { direction:rtl; } .controller.right > * { direction:ltr; }
+    .player { align-self:start; color:#aebbb1; font-size:clamp(9px,1.5vw,13px); letter-spacing:.08em; }
+    .player strong { display:block; color:var(--mint2); font-size:1.15em; }
+    .dial-wrap { position:relative; width:clamp(62px,10vw,92px); height:clamp(62px,10vw,92px); border-radius:50%; border:clamp(6px,1vw,9px) solid #4d554f; background:radial-gradient(circle at 38% 33%,#838b84,#202723 52%,#101410 55%); box-shadow:inset 0 0 11px #000,0 2px 4px #000; }
+    .dial { appearance:none; position:absolute; inset:-5px; width:calc(100% + 10px); height:calc(100% + 10px); margin:0; opacity:0; cursor:ew-resize; }
+    .needle { position:absolute; left:50%; top:11%; width:3px; height:39%; background:var(--orange); transform-origin:50% 107%; border-radius:4px; box-shadow:0 0 3px #000; pointer-events:none; }
+    .angle { font-size:clamp(10px,1.7vw,14px); color:#d9e7dc; text-align:center; } .angle em { display:block; color:var(--orange); font-style:normal; font-weight:800; margin-top:3px; }
+    .hit { width:clamp(58px,10vw,92px); height:clamp(58px,10vw,92px); border-radius:50%; border:clamp(5px,.8vw,8px) solid #aa261f; background:radial-gradient(circle at 40% 30%,#ff6457,#b6211c 50%,#67140f 54%); color:white; font-size:clamp(10px,1.8vw,15px); font-weight:900; letter-spacing:.05em; box-shadow:inset 0 0 9px #500,0 3px 4px #000; cursor:pointer; touch-action:manipulation; }
+    .hit:active,.hit.active { transform:translateY(2px); box-shadow:inset 0 3px 10px #4c0805; }
+    #middle { display:grid; align-content:center; justify-items:center; gap:5px; min-width:70px; color:#adb8ae; font-size:10px; }
+    #gravity { background:#0d1510; color:#dce7de; border:1px solid #4c6655; border-radius:5px; padding:6px 4px; font-size:11px; }
+    #rotate { display:none; }
+    @media (orientation:portrait) and (max-width:700px) { #app { filter:blur(1.5px); pointer-events:none; } #rotate { display:grid; position:fixed; z-index:20; inset:0; place-items:center; padding:35px; text-align:center; background:#06110d; color:#d9f9e4; font-size:20px; line-height:1.4; } }
+    @media (max-height:600px) {
+      #app { gap:4px; padding-top:max(4px,env(safe-area-inset-top)); padding-bottom:max(4px,env(safe-area-inset-bottom)); }
+      header { min-height:27px; font-size:11px; } .tiny { padding:4px 6px; font-size:10px; }
+      #scope { border-width:7px; border-radius:10px; } #status { top:6px; font-size:10px; }
+      .card { max-width:min(480px,88vw); padding:10px 15px; border-radius:9px; }
+      .card h1 { margin-bottom:3px; font-size:24px; } .card p { margin:3px auto; font-size:12px; line-height:1.27; }
+      .card .history { display:none; } .start { margin-top:7px; min-height:34px; min-width:150px; font-size:11px; }
+      #controllers { gap:4px; } .controller { min-height:66px; padding:4px 7px; gap:6px; border-radius:8px; }
+      .dial-wrap { width:54px; height:54px; border-width:5px; } .needle { top:10%; height:40%; }
+      .hit { width:50px; height:50px; border-width:4px; font-size:9px; } .player { font-size:8px; }
+      .angle { font-size:8px; } #middle { min-width:56px; gap:2px; font-size:8px; } #gravity { padding:3px; font-size:9px; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <header><div class="brand">Tennis <span>for Two</span> · 1958</div><div class="score"><span id="leftName">GAMER 1</span> <b id="leftScore">0</b> — <b id="rightScore">0</b> <span id="rightName">GAMER 2</span></div><div class="controls-top"><button class="tiny" id="pause">Pausa</button><button class="tiny" id="reset">Reiniciar</button></div></header>
+  <main id="scope"><canvas id="court" aria-label="Pista de tenis lateral"></canvas><div id="status"></div><div id="creator-credit">Adaptación: Troy Nebula</div><div id="overlay"><section class="card"><h1>Tennis for Two</h1><p>Una pelota luminosa, una red, dos mandos. Ajustad el ángulo y pulsad <b>GOLPE</b> cuando la bola esté en vuestro lado.</p><p class="history">Recreación para jugar juntos del juego de William Higinbotham (1958), mostrado en un osciloscopio. La versión de 1959 ya permitía cambiar la gravedad.</p><p class="credit">Creado por Troy Nebula</p><button class="start" id="start">EMPEZAR PARTIDA</button></section></div></main>
+  <section id="controllers" aria-label="Mandos de jugadores">
+    <div class="controller"><div class="player"><strong>GAMER 1</strong></div><div class="dial-wrap"><span class="needle" id="needleL"></span><input class="dial" id="angleL" type="range" min="18" max="76" value="47" aria-label="Ángulo de Gamer 1"></div><div class="angle">ÁNGULO<em id="angleTextL">47°</em></div><button class="hit" id="hitL">GOLPE</button></div>
+    <div id="middle"><label for="gravity">GRAVEDAD</label><select id="gravity"><option value="1">TIERRA</option><option value=".38">LUNA</option><option value="2.53">JÚPITER</option></select><label for="power">POTENCIA</label><select id="power"><option value=".00046">SUAVE</option><option value=".00058">MEDIA</option><option value=".00070">FUERTE</option></select></div>
+    <div class="controller right"><div class="player"><strong>GAMER 2</strong></div><div class="dial-wrap"><span class="needle" id="needleR"></span><input class="dial" id="angleR" type="range" min="18" max="76" value="47" aria-label="Ángulo de Gamer 2"></div><div class="angle">ÁNGULO<em id="angleTextR">47°</em></div><button class="hit" id="hitR">GOLPE</button></div>
+  </section>
+</div><div id="rotate">↻<br>Gira el dispositivo para jugar en horizontal.</div>
+<script>
+(() => {
+ // Evita que los toques rápidos de juego activen el zoom de Safari.
+ let lastTouchEnd=0;
+ document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});
+ document.addEventListener('gesturechange',e=>e.preventDefault(),{passive:false});
+ document.addEventListener('gestureend',e=>e.preventDefault(),{passive:false});
+ document.addEventListener('touchmove',e=>{ if(e.touches.length>1)e.preventDefault(); },{passive:false});
+ document.addEventListener('touchend',e=>{ const now=Date.now(); if(now-lastTouchEnd<350)e.preventDefault(); lastTouchEnd=now; },{passive:false});
+ document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
+ const canvas=document.querySelector('#court'), ctx=canvas.getContext('2d'), scope=document.querySelector('#scope');
+ const $=s=>document.querySelector(s); let W=0,H=0,dpr=1,running=false,paused=false,finished=false,last=0;
+ let scores=[0,0], server=0, ball, trail=[], flash=0, message='';
+ const court={left:0,right:0,ground:0,netX:0,netH:0}; const gravity=()=>0.00078*parseFloat($('#gravity').value);
+ const angleInputs=[$('#angleL'),$('#angleR')], needles=[$('#needleL'),$('#needleR')], angleTexts=[$('#angleTextL'),$('#angleTextR')], hitBtns=[$('#hitL'),$('#hitR')];
+ function resize(){ const r=scope.getBoundingClientRect(); dpr=Math.min(devicePixelRatio||1,2); W=r.width;H=r.height;canvas.width=W*dpr;canvas.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0); court.left=W*.065;court.right=W*.935;court.ground=H*.77;court.netX=W/2;court.netH=H*.18; if(!ball) readyBall(); }
+ function readyBall(){ ball={x:server?court.right-18:court.left+18,y:court.ground-7,vx:0,vy:0,active:false,owner:server,bounces:0}; trail=[]; message=`${server?'GAMER 2':'GAMER 1'} SACA`; $('#status').textContent=message; }
+ function shotAngle(i){ const raw=+angleInputs[i].value; return i?raw:94-raw; }
+ function updateDial(i){let raw=+angleInputs[i].value; needles[i].style.transform=`translateX(-50%) rotate(${i?raw-90:raw-4}deg)`;angleTexts[i].textContent=shotAngle(i)+'°';} angleInputs.forEach((x,i)=>{x.addEventListener('input',()=>updateDial(i));updateDial(i)});
+ function hit(i){ if(!running||paused||finished)return; hitBtns[i].classList.add('active');setTimeout(()=>hitBtns[i].classList.remove('active'),100); if(!ball.active){if(i===ball.owner) launch(i);return;} const onSide=i===0?ball.x<court.netX:ball.x>court.netX; const near=Math.abs(ball.x-(i?court.right:court.left))<W*.48 && ball.y>court.ground-H*.38; const arriving=ball.vx*(i?1:-1)>0; if(onSide&&near&&arriving) launch(i); }
+ function launch(i){ const a=shotAngle(i)*Math.PI/180, speed=Math.max(W,H)*(+$('#power').value); ball.active=true;ball.owner=i;ball.bounces=0;ball.vx=(i? -1:1)*Math.cos(a)*speed;ball.vy=-Math.sin(a)*speed;message=''; $('#status').textContent=''; }
+ function point(winner,reason){ scores[winner]++; $('#leftScore').textContent=scores[0];$('#rightScore').textContent=scores[1];server=winner;ball.active=false;flash=1;message=`Punto para ${winner?'GAMER 2':'GAMER 1'} · ${reason}`; $('#status').textContent=message; if(scores[winner]>=5){ finished=true; $('#overlay').innerHTML=`<section class="card"><h1>Partida terminada</h1><p>Gana <b>${winner?'GAMER 2':'GAMER 1'}</b> por ${scores[0]}–${scores[1]}.</p><button class="start" id="again">OTRA PARTIDA</button></section>`;$('#overlay').style.display='grid';$('#again').onclick=reset; } else setTimeout(readyBall,900); }
+ function update(dt){ if(!ball.active)return; ball.vy+=gravity()*dt; ball.x+=ball.vx*dt;ball.y+=ball.vy*dt;trail.push({x:ball.x,y:ball.y,a:1}); if(trail.length>28)trail.shift();
+   const receiver=ball.owner?0:1, onReceiverSide=receiver===0?ball.x<court.netX:ball.x>court.netX;
+   $('#status').textContent=onReceiverSide?`${receiver?'GAMER 2':'GAMER 1'} · ¡GOLPE!`:'';
+   if(ball.y>=court.ground-5){
+     ball.y=court.ground-5;ball.vy*=-.72;ball.vx*=.92;ball.bounces++;
+     const bouncedOnReceiverSide=ball.owner===0?ball.x>court.netX:ball.x<court.netX;
+     if(ball.bounces===1&&!bouncedOnReceiverSide){point(ball.owner?0:1,'bote en su propio campo');return;}
+     if(ball.bounces>1){point(ball.owner,'sin devolución');return;}
+   }
+   if(Math.abs(ball.x-court.netX)<3 && ball.y>court.ground-court.netH && ball.y<court.ground+3){ point(ball.owner?0:1,'la red');return; }
+   if(ball.x<court.left-18||ball.x>court.right+18){ point(ball.bounces>0?ball.owner:(ball.owner?0:1),ball.bounces>0?'sin devolución':'fuera');return; }
+ }
+ function draw(){ctx.clearRect(0,0,W,H);ctx.fillStyle='#06140d';ctx.fillRect(0,0,W,H);ctx.save();ctx.globalAlpha=.12;ctx.strokeStyle='#83d99f';ctx.lineWidth=1;for(let x=court.left;x<court.right;x+=W*.058){ctx.beginPath();ctx.moveTo(x,H*.13);ctx.lineTo(x,court.ground);ctx.stroke()}for(let y=H*.18;y<court.ground;y+=H*.095){ctx.beginPath();ctx.moveTo(court.left,y);ctx.lineTo(court.right,y);ctx.stroke()}ctx.restore();
+   ctx.strokeStyle='#83f3af';ctx.shadowColor='#55dd8c';ctx.shadowBlur=5;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(court.left,court.ground);ctx.lineTo(court.right,court.ground);ctx.stroke();ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(court.netX,court.ground);ctx.lineTo(court.netX,court.ground-court.netH);ctx.stroke();ctx.shadowBlur=0;
+   trail.forEach((p,j)=>{ctx.globalAlpha=(j/trail.length)*.55;ctx.fillStyle='#8dffc3';ctx.beginPath();ctx.arc(p.x,p.y,1.2+j/trail.length*1.8,0,Math.PI*2);ctx.fill();});ctx.globalAlpha=1;
+   if(ball){ctx.shadowColor='#8dffc3';ctx.shadowBlur=11;ctx.fillStyle='#d8ffe7';ctx.beginPath();ctx.arc(ball.x,ball.y,4,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;}
+   if(flash){ctx.fillStyle=`rgba(151,255,190,${flash*.11})`;ctx.fillRect(0,0,W,H);flash*=.9;}
+ }
+ function loop(t){let dt=Math.min(t-last||16,33);last=t;if(running&&!paused&&!finished)update(dt);draw();requestAnimationFrame(loop)}
+ function reset(){scores=[0,0];server=0;finished=false;$('#leftScore').textContent='0';$('#rightScore').textContent='0';$('#overlay').style.display='none';readyBall();}
+ $('#start').onclick=()=>{running=true;$('#overlay').style.display='none';readyBall()}; $('#reset').onclick=reset; $('#pause').onclick=()=>{if(!running)return;paused=!paused;$('#pause').textContent=paused?'Seguir':'Pausa';$('#status').textContent=paused?'PAUSA':' ';};
+ hitBtns.forEach((b,i)=>{b.addEventListener('pointerdown',e=>{e.preventDefault();hit(i)});});
+ window.addEventListener('keydown',e=>{if(e.key==='a')hit(0);if(e.key==='l')hit(1);}); window.addEventListener('resize',resize);resize();requestAnimationFrame(loop);
+ if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js?v=gamers-1.0.2',{updateViaCache:'none'});
+})();
+</script>
+</body></html>

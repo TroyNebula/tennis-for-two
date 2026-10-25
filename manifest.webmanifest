@@ -1,0 +1,10 @@
+{
+  "name":"Tennis for Two — Gamer 1 y Gamer 2",
+  "short_name":"Tennis for Two",
+  "start_url":"./?v=gamers-1.0.2",
+  "display":"standalone",
+  "background_color":"#050706",
+  "theme_color":"#081511",
+  "orientation":"landscape",
+  "lang":"es"
+}
