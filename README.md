@@ -1,3 +1,5 @@
+![Tennis for Two — Adaptación de Troy Nebula](tennis-for-two-banner.gif)
+
 # Tennis for Two · Gamer 1 y Gamer 2
 
 **Creadora de esta adaptación: Troy Nebula.**
